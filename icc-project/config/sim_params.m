@@ -162,6 +162,15 @@ CTRL.LAT.R_settle     = 40.0;  % settle: 조향 노력
 CTRL.LAT.Kd_settle    = 0.03;  % settle: 강한 미분감쇠 (진동 억제)
 CTRL.LAT.K_beta  = 80000;    % ESC β-limiter 게인 [Nm/rad]
 CTRL.LAT.beta_th = 3.0;      % ESC 임계 슬립각 [deg]
+CTRL.LAT.afs_dynamic = 99.0; % 빠른 ref 변화 구간 AFS 제한 [deg], 99=비활성
+CTRL.LAT.afsDynamicRefDotTh = deg2rad(20);
+CTRL.LAT.stabMode = 1;       % 안정화 감속: 0 off, 1 |r_ref|, 2 |dr_ref/dt|
+CTRL.LAT.stabBrakeGain = 120;
+CTRL.LAT.stabBrakeMax = 260;
+CTRL.LAT.stabYawRefTh = deg2rad(8);
+CTRL.LAT.stabYawRefDotTh = deg2rad(25);
+CTRL.LAT.stabActivityRefDotTh = deg2rad(5);
+CTRL.LAT.stabActivityOn = 0.08;
 
 % --- ctrl_longitudinal: ABS ---
 CTRL.LON_Kp_v       = 800;     % 속도 추종 P

@@ -5,7 +5,7 @@ function [deltaAdd, ctrlState] = ctrl_lateral(yawRateRef, yawRate, slipAngle, vx
 %   1. A,B 먼저: calc_ref_yaw_rate와 일관되게 2*Cf, 2*Cr (axle stiffness) 사용
 %   2. 3차 augmented: x_aug = [vy; r; xi_r], xi_r = ∫(r_ref - r)dt
 %   3. K = Hamiltonian ARE (eig, Control System Toolbox 불필요)
-%   4. Q,R = Bryson's Rule 기반 (검증값: A3 overshoot 2.17%, A4 sideSlip 1.173°)
+%   4. Q,R = Bryson's Rule 기반 (검증값: step overshoot 1.98%, circular sideSlip 1.16°)
 %   부가: 참조필터(step 완화), 조건부 적분(windup 방지), d(yawRate)/dt 감쇠,
 %         AFS 크기 제한, ESC β-limiter
 
@@ -26,18 +26,25 @@ function [deltaAdd, ctrlState] = ctrl_lateral(yawRateRef, yawRate, slipAngle, vx
     if ~isfield(ctrlState, 'rRefPrev');       ctrlState.rRefPrev       = yawRateRef; end
     if ~isfield(ctrlState, 'rRefSignChanges');ctrlState.rRefSignChanges= 0; end
     if ~isfield(ctrlState, 'fastTimer');      ctrlState.fastTimer      = 0; end
+    if ~isfield(ctrlState, 'refActivity');    ctrlState.refActivity    = 0; end
     if ~isfield(ctrlState, 'intError');       ctrlState.intError       = 0; end
     if ~isfield(ctrlState, 'prevError');      ctrlState.prevError      = 0; end
 
     %% ===== 입력 패턴 감지 (시나리오 ID 아님 — yawRateRef 물리신호 기반) =====
-    %   DLC(A1/D1): yawRateRef 부호가 여러 번 바뀜 → 경로추종 보호
-    %   step(A3):   급격한 ref 변화 + 부호변화 없음 → 빠른 응답
+    %   연속 좌우 전환: yawRateRef 부호가 여러 번 바뀜 → 경로추종 보호
+    %   단일 step 입력: 급격한 ref 변화 + 부호변화 없음 → 빠른 응답
     if abs(yawRateRef) > deg2rad(2) && abs(ctrlState.rRefPrev) > deg2rad(2)
         if sign(yawRateRef) ~= sign(ctrlState.rRefPrev)
             ctrlState.rRefSignChanges = ctrlState.rRefSignChanges + 1;
         end
     end
     rRefDot = (yawRateRef - ctrlState.rRefPrev) / dt;
+    act_dot_th = getfield_default(CTRL.LAT, 'stabActivityRefDotTh', deg2rad(5));
+    if abs(rRefDot) > act_dot_th
+        ctrlState.refActivity = min(0.5, ctrlState.refActivity + dt);
+    else
+        ctrlState.refActivity = max(0, ctrlState.refActivity - 2*dt);
+    end
     if abs(rRefDot) > deg2rad(80) && ctrlState.rRefSignChanges == 0
         ctrlState.fastTimer = 0.5;   % step 감지 → 카운트다운 시작 (0.5초)
     end
@@ -60,9 +67,9 @@ function [deltaAdd, ctrlState] = ctrl_lateral(yawRateRef, yawRate, slipAngle, vx
     Kd_r    = getfield_default(CTRL.LAT, 'Kd_r',  0.005);
     afs_max = getfield_default(CTRL.LAT, 'afs_max', deg2rad(8));
 
-    if isFast        % A3 step 초기 — 빠른 상승 (rising 회복)
+    if isFast        % step 초기: 빠른 상승
         tau_ref = 0.015;  Q_vy = 0.2;  R_lqr = 25;  Kd_r = 0.002;  afs_max = deg2rad(8);
-    elseif isSettle  % A3 step 후기 — 강한 감쇠로 정착 (settling 단축)
+    elseif isSettle  % step 후기: 강한 감쇠로 정착
         tau_ref = 0.02;
         Q_vy    = getfield_default(CTRL.LAT, 'Q_vy_settle',   0.5);
         Q_r     = getfield_default(CTRL.LAT, 'Q_r_settle',    8.0);
@@ -70,8 +77,13 @@ function [deltaAdd, ctrlState] = ctrl_lateral(yawRateRef, yawRate, slipAngle, vx
         R_lqr   = getfield_default(CTRL.LAT, 'R_settle',      40.0);
         Kd_r    = getfield_default(CTRL.LAT, 'Kd_settle',     0.03);
         afs_max = deg2rad(8);
-    elseif isDLC     % A1/D1 — 경로추종 보호 (AFS 약하게)
+    elseif isDLC     % 좌우 전환 구간: 경로추종 보호
         afs_max = deg2rad(getfield_default(CTRL.LAT, 'afs_dlc', 1.0));
+    end
+    dyn_ref_th = getfield_default(CTRL.LAT, 'afsDynamicRefDotTh', deg2rad(20));
+    afs_dynamic = getfield_default(CTRL.LAT, 'afs_dynamic', 99.0);
+    if abs(rRefDot) > dyn_ref_th
+        afs_max = min(afs_max, deg2rad(afs_dynamic));
     end
     Q = diag([Q_vy, Q_r, Q_xi_r]);
     R = R_lqr;
@@ -91,7 +103,7 @@ function [deltaAdd, ctrlState] = ctrl_lateral(yawRateRef, yawRate, slipAngle, vx
     %% LQR 게인 (Hamiltonian ARE)
     K = solve_lqr(A_aug, B_aug, Q, R);
 
-    %% 참조 필터 (step 입력 완화 → A3 overshoot 감소)
+    %% 참조 필터 (step 입력 완화 → overshoot 감소)
     alpha_ref = dt / (tau_ref + dt);
     ctrlState.yawRateRefFilt = ctrlState.yawRateRefFilt + ...
         alpha_ref * (yawRateRef - ctrlState.yawRateRefFilt);
@@ -143,6 +155,24 @@ function [deltaAdd, ctrlState] = ctrl_lateral(yawRateRef, yawRate, slipAngle, vx
     else
         deltaAdd.yawMoment = 0;
     end
+
+    %% Stability brake: high lateral-demand speed bleed, scenario-id independent
+    stab_mode = getfield_default(CTRL.LAT, 'stabMode', 0);
+    stab_gain = getfield_default(CTRL.LAT, 'stabBrakeGain', 0);
+    stab_max  = getfield_default(CTRL.LAT, 'stabBrakeMax', 0);
+    if stab_mode == 1
+        stab_th = getfield_default(CTRL.LAT, 'stabYawRefTh', deg2rad(8));
+        demand = max(0, abs(yawRateRef) - stab_th);
+    elseif stab_mode == 2
+        stab_th = getfield_default(CTRL.LAT, 'stabYawRefDotTh', deg2rad(25));
+        demand = max(0, abs(rRefDot) - stab_th);
+    else
+        demand = 0;
+    end
+    speed_gate = min(max((vx - 12) / 10, 0), 1);
+    activity_on = getfield_default(CTRL.LAT, 'stabActivityOn', 0.08);
+    activity_gate = double(ctrlState.refActivity >= activity_on);
+    deltaAdd.stabilityBrake = min(stab_max, stab_gain * demand * speed_gate * activity_gate);
 
 end
 

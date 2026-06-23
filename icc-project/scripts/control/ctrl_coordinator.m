@@ -38,10 +38,17 @@ function actuatorCmd = ctrl_coordinator(latCmd, lonCmd, verCmd, vx, VEH, CTRL, L
         absBrake = zeros(4, 1);
     end
 
+    %% 3b. Optional symmetric stability brake from lateral controller
+    if isfield(latCmd, 'stabilityBrake') && isfinite(latCmd.stabilityBrake)
+        stabBrake = max(0, min(LIM.MAX_BRAKE_TRQ, latCmd.stabilityBrake)) * ones(4, 1);
+    else
+        stabBrake = zeros(4, 1);
+    end
+
     %% 4. 합산 + Clipping
-    %   brakeESC(양수, ESC) + absBrake(음수, ABS 감압)
+    %   brakeESC(양수, ESC) + stabBrake(양수, 안정화 감속) + absBrake(음수, ABS 감압)
     %   하한은 -MAX_BRAKE_TRQ (감압이 시나리오 brake를 초과 상쇄 가능)
-    brakeTot = brakeESC + absBrake;
+    brakeTot = brakeESC + stabBrake + absBrake;
     actuatorCmd.brakeTorque = max(-LIM.MAX_BRAKE_TRQ, ...
                                    min(LIM.MAX_BRAKE_TRQ, brakeTot));
 

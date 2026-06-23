@@ -50,7 +50,7 @@ function [forceCmd, ctrlState] = ctrl_longitudinal(vxRef, vx, ax, ctrlState, CTR
 
     %% 2. ABS — 슬립 기반 per-wheel 조절 (제동 상황에서만 활성)
     %   제동 게이팅: 실제 강한 감속(ax < ax_brake_th) 중일 때만 ABS 개입
-    %     → A3/A4 선회(제동 없음) 시 오작동 방지
+    %     → 제동 명령이 없는 선회 구간에서 오작동 방지
     %   λ_i > λ_ref: brake 감소 (잠김 방지)
     %   λ_i < λ_ref: brake 증가 (노는 바퀴 활용 → stoppingDist↓)
     ax_brake_th = getfield_default(CTRL, 'LON_ax_brake_th', -3.0);  % [m/s²]
