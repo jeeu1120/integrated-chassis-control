@@ -1,0 +1,146 @@
+{
+  "student": {
+    "student_id": "202525344",
+    "name": "정지우",
+    "team_members": [],
+    "course": "자동제어 - 2026 봄",
+    "ai_usage": "Claude Code (Anthropic) + Codex used for: LQR controller design (bicycle model, augmented I-action), Q/R tuning, ABS/CDC design, MATLAB debugging"
+  },
+  "timestamp": "2026-06-23T09:36:04",
+  "quantitative": {
+    "score": 61.115888754994266,
+    "max": 70.0,
+    "pct": 87.30841250713468
+  },
+  "deductions": {
+    "amount": 0,
+    "reasons": []
+  },
+  "errors": [],
+  "breakdown": [
+    {
+      "sid": "A3",
+      "kpi": "yawRateOvershoot",
+      "value": 1.9763401143592196,
+      "target": 10,
+      "score": 4,
+      "max": 4
+    },
+    {
+      "sid": "A3",
+      "kpi": "yawRateRiseTime",
+      "value": 0.1569999999999998,
+      "target": 0.3,
+      "score": 4,
+      "max": 4
+    },
+    {
+      "sid": "A3",
+      "kpi": "yawRateSettling",
+      "value": 0.5529999999999999,
+      "target": 0.8,
+      "score": 4,
+      "max": 4
+    },
+    {
+      "sid": "A1",
+      "kpi": "sideSlipMax",
+      "value": 2.9801649582182623,
+      "target": 3,
+      "score": 6,
+      "max": 6
+    },
+    {
+      "sid": "A1",
+      "kpi": "LTR_max",
+      "value": 0.7851930317176674,
+      "target": 0.6,
+      "score": 3.456724735686105,
+      "max": 5
+    },
+    {
+      "sid": "A1",
+      "kpi": "lateralDevMax",
+      "value": 1.9860442979471815,
+      "target": 0.7,
+      "score": 0,
+      "max": 4
+    },
+    {
+      "sid": "A4",
+      "kpi": "understeerGradient",
+      "value": 0.000389651390517746,
+      "target": 0.003,
+      "score": 4.561773730245304,
+      "max": 5
+    },
+    {
+      "sid": "A4",
+      "kpi": "sideSlipMax",
+      "value": 1.1596701356382593,
+      "target": 2,
+      "score": 5,
+      "max": 5
+    },
+    {
+      "sid": "A7",
+      "kpi": "sideSlipMax",
+      "value": 3.779324677758893,
+      "target": 5,
+      "score": 8,
+      "max": 8
+    },
+    {
+      "sid": "A7",
+      "kpi": "LTR_max",
+      "value": 0.4144866482953383,
+      "target": 0.7,
+      "score": 7,
+      "max": 7
+    },
+    {
+      "sid": "B1",
+      "kpi": "stoppingDistance",
+      "value": 64.85874178581352,
+      "target": 66.5,
+      "score": 5,
+      "max": 5
+    },
+    {
+      "sid": "B1",
+      "kpi": "absSlipRMS",
+      "value": 0.08500401514912738,
+      "target": 0.1,
+      "score": 5,
+      "max": 5
+    },
+    {
+      "sid": "D1",
+      "kpi": "sideSlipMax",
+      "value": 4.285910969854846,
+      "target": 4,
+      "score": 3.7140890301451543,
+      "max": 4
+    },
+    {
+      "sid": "D1",
+      "kpi": "LTR_max",
+      "value": 0.7850096223246895,
+      "target": 0.6,
+      "score": 1.3833012589177016,
+      "max": 2
+    },
+    {
+      "sid": "D1",
+      "kpi": "lateralDevMax",
+      "value": 1.9860442979471815,
+      "target": 1,
+      "score": 0,
+      "max": 2
+    }
+  ],
+  "final_auto": 61.115888754994266,
+  "ctrl_signature": "30750942bdfc89b4435d33d11904055fb79b9fbf1c820ed1a72bf4c0aac929b6",
+  "matlab_version": "25.1 (R2025a)",
+  "solver_used": "ode45"
+}

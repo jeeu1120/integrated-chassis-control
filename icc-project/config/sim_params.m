@@ -137,3 +137,44 @@ end
 
 fprintf('[sim_params] Parameters loaded. Plant=%s, VehicleSet=%s\n', ...
         SIM.plantModel, SIM.vehicleSet);
+
+%% ===== 학생 추가 파라미터 (CTRL.* 허용 범위) =====
+
+% --- ctrl_lateral: 3차 LQR with I-action ---
+CTRL.LAT.VEH     = VEH;       % bicycle model 구성용 차량 파라미터
+CTRL.LAT.Q_vy    = 1.0;       % LQR Q: vy 가중 (A1 sideSlip 억제 강화)
+CTRL.LAT.Q_r     = 5.0;       % LQR Q: yaw rate 가중
+CTRL.LAT.Q_xi_r  = 0.25;      % LQR Q: 적분 가중
+CTRL.LAT.R_lqr   = 50.0;      % LQR R: 조향 노력
+CTRL.LAT.xi_r_max        = 0.05;  % 적분 anti-windup [rad]
+CTRL.LAT.e_int_on_degps  = 1.0;   % 조건부 적분 임계 [deg/s]
+CTRL.LAT.tau_ref = 0.08;     % 참조 필터 시정수 [s]
+CTRL.LAT.Kd_r    = 0.005;    % 미분 감쇠 게인
+CTRL.LAT.tau_d   = 0.08;     % 미분 필터 시정수 [s]
+CTRL.LAT.afs_max = deg2rad(8);   % AFS 크기 제한 [rad] (normal/fast)
+CTRL.LAT.afs_dlc = 3.0;      % DLC 모드 AFS 제한 [deg] (경로추종 보호)
+% A3 step 응답 단계 분리 (fast 상승 → settle 정착)
+CTRL.LAT.t_fast       = 0.25;  % 상승 구간 길이 [s]
+CTRL.LAT.Q_vy_settle  = 0.5;   % settle: vy 가중
+CTRL.LAT.Q_r_settle   = 8.0;   % settle: yaw 가중
+CTRL.LAT.Q_xi_settle  = 2.0;   % settle: 적분 가중 (정착 가속)
+CTRL.LAT.R_settle     = 40.0;  % settle: 조향 노력
+CTRL.LAT.Kd_settle    = 0.03;  % settle: 강한 미분감쇠 (진동 억제)
+CTRL.LAT.K_beta  = 80000;    % ESC β-limiter 게인 [Nm/rad]
+CTRL.LAT.beta_th = 3.0;      % ESC 임계 슬립각 [deg]
+
+% --- ctrl_longitudinal: ABS ---
+CTRL.LON_Kp_v       = 800;     % 속도 추종 P
+CTRL.LON_Ki_v       = 80;      % 속도 추종 I
+CTRL.LON_intMax     = 50;      % I anti-windup
+CTRL.LON_Fx_min     = -14000;  % 종방향 힘 하한 [N]
+CTRL.LON_lambda_ref = 0.10;    % ABS 목표 슬립 (μ-피크 근처 → 최대 마찰)
+CTRL.LON_K_rel      = 7000;    % 슬립 초과 → 감압 게인 [Nm/slip]
+CTRL.LON_relief_max = 1200;    % per-wheel 최대 감압 [Nm]
+
+% --- ctrl_vertical: CDC hybrid skyhook+groundhook ---
+CTRL.VER.cMin    = 800;      % 최소 감쇠 [Ns/m]
+CTRL.VER.cMax    = 6000;     % 최대 감쇠 [Ns/m]
+CTRL.VER.skyGain = 3500;     % Skyhook 게인 [Ns/m] (body bounce 1-2Hz)
+CTRL.VER.gndGain = 1500;     % Groundhook 게인 [Ns/m] (wheel hop 10-15Hz)
+CTRL.VER.hybridAlpha = 0.7;  % skyhook 비중 (1=순수 skyhook, 0=순수 groundhook)
