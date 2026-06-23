@@ -5,7 +5,7 @@
     info.name         = '정지우';
     info.team_members = {};
 
-    info.course = '자동제어 - 2026 봄';
+    info.course = '자동제어특론 - 2026 봄';
 
     info.ai_usage = 'Claude Code (Anthropic) + Codex used for: LQR controller design (bicycle model, augmented I-action), Q/R tuning, ABS/CDC design, MATLAB debugging';
 

@@ -3,7 +3,7 @@
     "student_id": "202525344",
     "name": "정지우",
     "team_members": [],
-    "course": "자동제어 - 2026 봄",
+    "course": "자동제어특론 - 2026 봄",
     "ai_usage": "Claude Code (Anthropic) + Codex used for: LQR controller design (bicycle model, augmented I-action), Q/R tuning, ABS/CDC design, MATLAB debugging"
   },
   "timestamp": "2026-06-23T15:36:27",
